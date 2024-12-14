@@ -10,6 +10,8 @@ use reth_node_builder::engine_tree_config::{
     DEFAULT_MEMORY_BLOCK_BUFFER_TARGET, DEFAULT_PERSISTENCE_THRESHOLD,
 };
 
+use rbuilder::fee_distribution::FeeDistributionConfig;
+
 /// Parameters for rollup configuration
 #[derive(Debug, Clone, Default, PartialEq, Eq, clap::Args)]
 #[command(next_help_heading = "Rollup")]
@@ -64,6 +66,29 @@ pub struct OpRbuilderArgs {
     /// Enable the engine2 experimental features on op-reth binary
     #[arg(long = "rbuilder.config")]
     pub rbuilder_config_path: PathBuf,
+
+    /// Treasury address for fee withholding
+    #[arg(long, env = "TREASURY_ADDRESS")]
+    pub treasury_address: Option<Address>,
+
+    /// Percentage of fees to withhold (0-100)
+    #[arg(long, env = "WITHHOLDING_PERCENTAGE", default_value = "10")]
+    pub withholding_percentage: u8,
+}
+
+impl OpRbuilderArgs {
+    pub fn into_config(self) -> Result<Config, eyre::Error> {
+        let fee_distribution = FeeDistributionConfig {
+            treasury_address: self.treasury_address.unwrap_or(Address::ZERO),
+            withholding_percentage: self.withholding_percentage,
+        };
+
+        fee_distribution.validate()?;
+
+        Ok(Config {
+            fee_distribution,
+        })
+    }
 }
 
 #[cfg(test)]

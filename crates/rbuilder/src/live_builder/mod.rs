@@ -131,8 +131,6 @@ where
     }
 
     pub async fn run(self) -> eyre::Result<()> {
-        // We keep the last block to avoid going back in time since we are now very robust about reorgs or this kind of behavior.
-        let mut last_processed_block: Option<u64> = None;
         info!("Builder block list size: {}", self.blocklist.len(),);
         info!(
             "Builder coinbase address: {:?}",
@@ -181,10 +179,7 @@ where
         );
 
         let watchdog_sender = match self.watchdog_timeout {
-            Some(duration) => Some(spawn_watchdog_thread(
-                duration,
-                "block build started".to_string(),
-            )?),
+            Some(duration) => Some(spawn_watchdog_thread(duration)?),
             None => {
                 info!("Watchdog not enabled");
                 None
@@ -200,20 +195,12 @@ where
                 );
                 continue;
             }
-            // Allow only increasing blocks
-            if last_processed_block.map_or(false, |last_processed_block| {
-                payload.block() <= last_processed_block
-            }) {
-                continue;
-            }
-            let current_time = OffsetDateTime::now_utc();
             // see if we can get parent header in a reasonable time
-            let time_to_slot = payload.timestamp() - current_time;
+
+            let time_to_slot = payload.timestamp() - OffsetDateTime::now_utc();
             debug!(
                 slot = payload.slot(),
                 block = payload.block(),
-                ?current_time,
-                payload_timestamp = ?payload.timestamp(),
                 ?time_to_slot,
                 "Received payload, time till slot timestamp",
             );
@@ -248,7 +235,6 @@ where
             );
 
             inc_active_slots();
-            last_processed_block = Some(payload.block());
 
             if let Some(block_ctx) = BlockBuildingContext::from_attributes(
                 payload.payload_attributes_event.clone(),

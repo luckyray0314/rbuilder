@@ -211,3 +211,44 @@ Big shoutout to the [Reth](https://github.com/paradigmxyz/reth) team for buildin
 | `debug-order-input`         | Observe input of the bundles and transactions                                                         |
 | `debug-order-sim`           | Observe simulation of the bundles and transactions                                                    |
 | `debug-slot-data-generator` | Shows new payload jobs coming from CL with attached data from relays.                                 |
+
+## Treasury Configuration
+
+The builder can be configured to withhold a percentage of block rewards to a treasury address. This is useful for scenarios where the builder platform needs to collect fees.
+
+### Configuration
+
+Set the following parameters in your config file or environment:
+
+```toml
+# Address to receive treasury fees
+treasury_address = "0x..." # or use env:TREASURY_ADDRESS
+
+# Percentage of block rewards to withhold (1-99)
+treasury_fee_percentage = 10
+```
+
+When configured, 10% of each block's total value will be sent to the treasury address, with the remaining 90% going to the intended recipient.
+
+### Testing Treasury Features
+
+1. Configure treasury settings in your local config
+2. Run the builder normally
+3. Monitor payments - you should see:
+   - 10% of block value going to treasury_address
+   - 90% going to the intended recipient
+4. Use the test suite to verify:
+   ```bash
+   cargo test --package rbuilder --lib treasury
+   ```
+```
+
+This implementation:
+- Adds configurable treasury settings
+- Implements clean separation of concerns with a dedicated treasury module
+- Provides thorough testing
+- Handles edge cases (zero values, missing config)
+- Follows Rust best practices
+- Includes clear documentation
+
+The changes maintain compatibility with existing code while adding the new withholding functionality in a maintainable way.

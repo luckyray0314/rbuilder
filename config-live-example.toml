@@ -12,6 +12,10 @@ coinbase_secret_key = "env:COINBASE_SECRET_KEY"
 relay_secret_key = "env:RELAY_SECRET_KEY"
 optimistic_relay_secret_key = "env:OPTIMISTIC_RELAY_SECRET_KEY"
 
+# Treasury configuration
+treasury_address = "env:TREASURY_ADDRESS" # Address to receive 10% of block rewards
+treasury_fee_percentage = 10 # Percentage of block rewards to withhold (1-99)
+
 # cl_node_url can be a single value, array of values, or passed by an environment variables with values separated with a comma
 # cl_node_url = "http://localhost:3500"
 cl_node_url = ["env:CL_NODE_URL"]
